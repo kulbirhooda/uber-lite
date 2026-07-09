@@ -1,13 +1,141 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  RIDER
+  DRIVER
+}
+
+enum VehicleType {
+  AFFORDABLE
+  PREMIUM
+  LUXURY
+  BIG
+}
+
+enum RideStatus {
+  REQUESTED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+enum FeedbackType {
+  RIDER_TO_DRIVER
+  DRIVER_TO_RIDER
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(RIDER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  driver           Driver?
+  savedAddresses   SavedAddress[]
+  ridesAsRider     Ride[]     @relation("RiderRides")
+  feedbackGiven    Feedback[] @relation("FeedbackGiven")
+  feedbackReceived Feedback[] @relation("FeedbackReceived")
+}
+
+model SavedAddress {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  label     String   // "Home", "Work", "Gym"
+  lat       Float
+  lng       Float
+  address   String
+  createdAt DateTime @default(now())
+}
+
+model Driver {
+  id            String      @id @default(uuid()) @db.Uuid
+  userId        String      @unique @db.Uuid
+  user          User        @relation(fields: [userId], references: [id])
+  vehicleModel  String
+  plateNumber   String      @unique
+  vehicleType   VehicleType
+  isAvailable   Boolean     @default(false)
+  currentLat    Float?
+  currentLng    Float?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  ridesAsDriver Ride[] @relation("DriverRides")
+}
+
+model Ride {
+  id            String     @id @default(uuid()) @db.Uuid
+  riderId       String     @db.Uuid
+  rider         User       @relation("RiderRides", fields: [riderId], references: [id])
+  driverId      String?    @db.Uuid
+  driver        Driver?    @relation("DriverRides", fields: [driverId], references: [id])
+
+  pickupLat     Float
+  pickupLng     Float
+  dropLat       Float
+  dropLng       Float
+
+  vehicleType   VehicleType
+  status        RideStatus @default(REQUESTED)
+
+  baseFare      Float
+  distanceFare  Float
+  surgeFare     Float      @default(0)
+  waitCharge    Float      @default(0)
+  totalFare     Float
+
+  stops         Stop[]
+  payment       Payment?
+  feedback      Feedback?
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Stop {
+  id        String   @id @default(uuid()) @db.Uuid
+  rideId    String   @db.Uuid
+  ride      Ride     @relation(fields: [rideId], references: [id])
+  lat       Float
+  lng       Float
+  order     Int      // sequence of the stop (1st, 2nd...)
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id        String   @id @default(uuid()) @db.Uuid
+  rideId    String   @unique @db.Uuid
+  ride      Ride     @relation(fields: [rideId], references: [id])
+  amount    Float
+  method    String   // "CARD", "CASH", "WALLET"
+  status    String   // "PENDING", "SUCCESS", "FAILED"
+  createdAt DateTime @default(now())
+}
+
+model Feedback {
+  id           String       @id @default(uuid()) @db.Uuid
+  rideId       String       @unique @db.Uuid
+  ride         Ride         @relation(fields: [rideId], references: [id])
+
+  type         FeedbackType
+
+  givenById    String       @db.Uuid
+  givenBy      User         @relation("FeedbackGiven", fields: [givenById], references: [id])
+
+  receivedById String       @db.Uuid
+  receivedBy   User         @relation("FeedbackReceived", fields: [receivedById], references: [id])
+
+  rating       Int
+  comment      String?
+  createdAt    DateTime     @default(now())
 }
