@@ -23,7 +23,7 @@ async function postSignup(req,res,next){
 }
 async function postSignin(req,res,next) {
     try{
-        const result = signupSchema.safeParse(req.body);
+        const result = signinSchema.safeParse(req.body);
         
         if (!result.success) {
 
@@ -35,11 +35,15 @@ async function postSignin(req,res,next) {
         
         const { email, password } = result.data;
         const data = await signin({ email, password });
-        res.status(200).json(result);
+        res.status(200).json(data);
     }
     catch (err) {
         res.status(500).json({ error: err.message });
     }
 }
-
-export {postSignup, postSignin}
+async function getMe(req,res,next) {
+    return res.status(200).json({
+        user: req.user
+    })
+}
+export {postSignup, postSignin, getMe}
