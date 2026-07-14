@@ -21,3 +21,14 @@ export const signinSchema = z.object({
         .min(8, "Password must be at least 8 characters long")
         .max(64, "Password too long"),
 });
+
+export const signupDriverSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  vehicleModel: z.string().min(1, "Vehicle model is required"),
+  plateNumber: z.string().min(1, "Plate number is required"),
+  vehicleType: z.enum(["AFFORDABLE", "PREMIUM", "LUXURY", "BIG"], {
+    errorMap: () => ({ message: "Invalid vehicle type" })
+  })
+})

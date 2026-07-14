@@ -1,3 +1,4 @@
+
 import axios from "./axios";
 
 export async function api(path, { method = 'GET', body, auth = false }) {
@@ -26,6 +27,9 @@ export const authApi = {
     },
     async me() {
         return api('/api/auth/me', { auth: true });
+    },
+    async signupDriver({ name, email, password, vehicleModel, plateNumber, vehicleType }){
+        return api('/api/auth/signup/driver', { method: 'POST', body: { name, email, password, vehicleModel, plateNumber, vehicleType } });
     }
 };
 

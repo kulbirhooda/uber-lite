@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/authContext";
-import "./Signin.css"
+import './Signin.css'
 
 export default function Signin() {
   const [email, setEmail] = useState("");
@@ -14,8 +14,12 @@ export default function Signin() {
     e.preventDefault();
     setErr("");
     try {
-      await signin({ email, password: pwd });
-      navigate("/dashboard");
+      const { user } = await signin({ email, password: pwd });
+      if (user.role === 'DRIVER') {
+        navigate("/driver/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (e) {
       setErr(e.message);
     }

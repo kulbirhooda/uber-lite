@@ -44,6 +44,15 @@ export function AuthProvider({ children }) {
     return { user, token };
   };
 
+  const signupDriver = async ({ name, email, password, vehicleModel, plateNumber, vehicleType }) => {
+    const { user, token } = await authApi.signupDriver({ name, email, password, vehicleModel, plateNumber, vehicleType });
+
+    auth.token=token;
+    auth.user=user;
+    setUser(user);
+    return {user , token};
+  }
+
   const logout = () => {
     auth.logout();
     setUser(null);
